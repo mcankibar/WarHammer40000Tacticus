@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    // TODO: Publish other events for stage changes
     public static event Action<int> OnStageChanged;
     public static event Action<string, bool> OnDialogueChanged;
 
