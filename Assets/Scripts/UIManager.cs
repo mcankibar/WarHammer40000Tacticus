@@ -1,10 +1,18 @@
 using UnityEngine;
-using TMPro;
 
 public class UIManager : MonoBehaviour
 {
-    [SerializeField] private GameObject _textBoxRoot;
-    [SerializeField] private TextMeshProUGUI _textMeshProUGUI;
+    [SerializeField]
+    private GameObject _textBoxRoot;
+
+    [SerializeField]
+    private TextBoxAnimationManager _textBoxAnimationManager;
+
+    void Awake()
+    {
+        if (_textBoxAnimationManager == null && _textBoxRoot != null)
+            _textBoxAnimationManager = _textBoxRoot.GetComponent<TextBoxAnimationManager>();
+    }
 
     void OnEnable()
     {
@@ -29,15 +37,18 @@ public class UIManager : MonoBehaviour
 
     void ShowTextBox(string text)
     {
-        if (_textMeshProUGUI != null)
-            _textMeshProUGUI.text = text;
-
         if (_textBoxRoot != null)
             _textBoxRoot.SetActive(true);
+
+        if (_textBoxAnimationManager != null)
+            _textBoxAnimationManager.Play(text);
     }
 
     void HideTextBox()
     {
+        if (_textBoxAnimationManager != null)
+            _textBoxAnimationManager.HideInstant();
+
         if (_textBoxRoot != null)
             _textBoxRoot.SetActive(false);
     }
