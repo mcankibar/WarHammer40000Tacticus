@@ -30,7 +30,7 @@ public class TextBoxAnimationManager : MonoBehaviour
 
     [Header("Slide")]
     [SerializeField]
-    private float textBoxMoveTime = 0.9f;
+    private float textBoxMoveTime = 0.7f;
 
     [SerializeField]
     private float backOvershoot = 1.4f;
@@ -54,8 +54,7 @@ public class TextBoxAnimationManager : MonoBehaviour
 
     [SerializeField]
     [TextArea(2, 4)]
-    private string demoCaption =
-        "You are outmatched. Abaddon's forces crush you. {Hold the line!}";
+    private string demoCaption = "You are outmatched. Abaddon's forces crush you. {Hold the line!}";
 
     private Vector2 _restAnchoredPosition;
     private Coroutine _activeRoutine;
@@ -92,7 +91,7 @@ public class TextBoxAnimationManager : MonoBehaviour
         if (captionText != null)
         {
             captionText.text = string.Empty;
-            captionText.maxVisibleCharacters = 0;
+            captionText.maxVisibleCharacters = int.MaxValue;
             captionText.color = defaultTextColor;
         }
     }
@@ -123,7 +122,7 @@ public class TextBoxAnimationManager : MonoBehaviour
             return;
 
         _visibleCharCount = _totalCharCount;
-        captionText.maxVisibleCharacters = _totalCharCount;
+        SetRevealedCharacters(_totalCharCount);
         _isTyping = false;
         _typewriterComplete = true;
     }
@@ -141,10 +140,7 @@ public class TextBoxAnimationManager : MonoBehaviour
         textBoxRoot.anchoredPosition = GetOffscreenBottomPosition(_restAnchoredPosition);
 
         if (captionText != null)
-        {
             captionText.text = string.Empty;
-            captionText.maxVisibleCharacters = 0;
-        }
     }
 
     private IEnumerator PlayRoutine(string rawCaption)
@@ -167,10 +163,13 @@ public class TextBoxAnimationManager : MonoBehaviour
         if (captionText == null)
             return;
 
+        // Keep FULL geometry/wrap from frame 0. Reveal via vertex alpha
+        // (maxVisibleCharacters collapses hidden chars and causes line jumps).
+        captionText.maxVisibleCharacters = int.MaxValue;
         captionText.text = _richText;
-        captionText.maxVisibleCharacters = 0;
-        captionText.ForceMeshUpdate();
+        captionText.ForceMeshUpdate(true);
         _totalCharCount = captionText.textInfo.characterCount;
+        SetRevealedCharacters(0);
     }
 
     private IEnumerator TextBoxMoveIn()
@@ -208,7 +207,7 @@ public class TextBoxAnimationManager : MonoBehaviour
 
         // First char immediately (JS tick() before setInterval)
         _visibleCharCount = 1;
-        captionText.maxVisibleCharacters = _visibleCharCount;
+        SetRevealedCharacters(_visibleCharCount);
 
         while (_visibleCharCount < _totalCharCount)
         {
@@ -218,11 +217,40 @@ public class TextBoxAnimationManager : MonoBehaviour
                 yield break;
 
             _visibleCharCount++;
-            captionText.maxVisibleCharacters = _visibleCharCount;
+            SetRevealedCharacters(_visibleCharCount);
         }
 
         _isTyping = false;
         _typewriterComplete = true;
+    }
+
+    /// <summary>
+    /// Shows the first <paramref name="revealedCount"/> characters by alpha;
+    /// the rest stay transparent but still occupy their final wrap positions.
+    /// Call only after the full text mesh has been built (no ForceMeshUpdate here).
+    /// </summary>
+    private void SetRevealedCharacters(int revealedCount)
+    {
+        TMP_TextInfo textInfo = captionText.textInfo;
+
+        for (int i = 0; i < textInfo.characterCount; i++)
+        {
+            TMP_CharacterInfo charInfo = textInfo.characterInfo[i];
+            if (!charInfo.isVisible)
+                continue;
+
+            int materialIndex = charInfo.materialReferenceIndex;
+            int vertexIndex = charInfo.vertexIndex;
+            Color32[] colors = textInfo.meshInfo[materialIndex].colors32;
+            byte alpha = i < revealedCount ? (byte)255 : (byte)0;
+
+            colors[vertexIndex + 0].a = alpha;
+            colors[vertexIndex + 1].a = alpha;
+            colors[vertexIndex + 2].a = alpha;
+            colors[vertexIndex + 3].a = alpha;
+        }
+
+        captionText.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
     }
 
     private string BuildRichText(string raw, out int plainCharCount)
@@ -287,7 +315,11 @@ public class TextBoxAnimationManager : MonoBehaviour
             {
                 if (
                     highlightColors[i] != null
-                    && string.Equals(highlightColors[i].key, "default", StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(
+                        highlightColors[i].key,
+                        "default",
+                        StringComparison.OrdinalIgnoreCase
+                    )
                 )
                     return highlightColors[i].color;
             }
