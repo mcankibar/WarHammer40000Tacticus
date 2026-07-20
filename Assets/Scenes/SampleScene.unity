@@ -538,7 +538,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &647120228
 RectTransform:
   m_ObjectHideFlags: 0
@@ -586,41 +586,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TextBoxAnimationManager
   textBoxRoot: {fileID: 647120228}
   textBoxCanvasGroup: {fileID: 647120229}
+  captionText: {fileID: 0}
   textBoxMoveTime: 1
-  offscreenPadding: 24
-  moveEase:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 0.7
-      value: 1.12
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
+  backOvershoot: 1.4
+  letterDelayMs: 30
+  defaultTextColor: {r: 1, g: 1, b: 1, a: 1}
+  defaultHighlightColor: {r: 0.91, g: 0.77, b: 0.28, a: 1}
+  highlightColors: []
+  playDemoOnStart: 0
+  demoCaption: You are outmatched. Abaddon's forces crush you. {Hold the line!}
 --- !u!1 &801434788
 GameObject:
   m_ObjectHideFlags: 0
@@ -1014,7 +988,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIManager
   _textBoxRoot: {fileID: 647120227}
-  _textMeshProUGUI: {fileID: 1697044848}
+  _textBoxAnimationManager: {fileID: 0}
 --- !u!1 &2062574364
 GameObject:
   m_ObjectHideFlags: 0
